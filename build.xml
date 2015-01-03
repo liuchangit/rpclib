@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<project name="rpclib" basedir="." default="dist">
+
+	<property name="name" value="rpclib" />
+	
+	<property name="version" value="1.0" />
+	
+	<property name="src.dir" value="src" />
+	<property name="test.dir" value="test" />
+	<property name="lib.dir" value="lib" />
+
+	<property name="build.dir" value=".build" />
+
+	<property name="test.classes.dir" value=".test_classes" />
+	<property name="test.output.dir" value=".test_output" />
+	
+	<property name="dist.dir" value="dist" />
+	
+	<property file="build.properties" />
+
+
+	<path id="build-classpath">
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<target name="clean" description="Clean output dirs (build, dist)">
+
+		<delete dir="${build.dir}" />
+		<delete dir="${test.classes.dir}" />
+		<delete dir="${test.output.dir}" />
+		<delete dir="${dist.dir}" />
+
+	</target>
+
+	<target name="init" depends="clean" description="make build and dist dirs">
+
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${test.classes.dir}" />
+		<mkdir dir="${test.output.dir}" />
+		<mkdir dir="${dist.dir}" />
+
+	</target>
+
+	<target name="compile" depends="init" description="Compile and build java">
+		<javac destdir="${build.dir}" source="1.5" target="1.5" debug="true" deprecation="true" optimize="true" failonerror="true" encoding="UTF-8" >
+			<src path="${src.dir}" />
+			<classpath refid="build-classpath" />
+		</javac>
+	</target>
+	
+	<target name="junit" depends="compile" description="run junit tests">
+		<javac destdir="${test.classes.dir}" source="1.5" target="1.5" debug="true" deprecation="true" optimize="true" failonerror="true" encoding="UTF-8" >
+			<src path="${test.dir}" />
+			<classpath refid="build-classpath" />
+			<classpath path="${build.dir}" />
+		</javac>
+		
+		<copy todir="${test.classes.dir}">
+			<fileset dir="${test.dir}" excludes="**/*.java" />
+		</copy>
+		
+		<junit printsummary="yes" haltonfailure="no" fork="yes" dir="${basedir}"
+			errorproperty="tests.failed" failureproperty="tests.failed" maxmemory="100m">
+			
+			<classpath refid="build-classpath" />
+			<classpath path="${build.dir}" />
+			<classpath path="${test.classes.dir}" />
+			
+			<formatter type="plain" />
+			
+			<batchtest todir="${test.output.dir}">
+				<fileset dir="${test.dir}" includes="**/*Test.java" />
+			</batchtest>
+		</junit>
+		
+	    <fail if="tests.failed">Tests failed!</fail>
+	</target>
+
+	<target name="jar" depends="compile" description="Compile and build java client">
+
+		<jar jarfile="${dist.dir}/${name}-${version}.jar" compress="true">
+			<fileset dir="${build.dir}">
+				<include name="com/easou/ps/common/**" />
+			</fileset>
+			<fileset dir="${src.dir}">
+				<include name="com/easou/ps/common/**" />
+			</fileset>
+		</jar>
+
+	</target>
+	
+	<target name="dist" depends="jar,junit" />
+
+</project>
